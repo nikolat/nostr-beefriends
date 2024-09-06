@@ -88,8 +88,7 @@ export const base = async (rawBody: string, mode: Mode): Promise<Response> => {
   }
   //出力
   if (responseEvent === null) {
-    const body = '';
-    return new Response(body, {
+    return new Response(null, {
       status: 204,
     });
   }
