@@ -9,7 +9,7 @@ import { Mode, Signer } from './utils.ts';
 import { getResponseEvent } from './response.ts';
 
 //入力イベントを検証するかどうか(デバッグ時は無効化した方が楽)
-const verifyInputEvent = true;
+const verifyInputEvent = false;
 
 export const base = async (rawBody: string, mode: Mode): Promise<Response> => {
   //署名用インスタンスを準備
