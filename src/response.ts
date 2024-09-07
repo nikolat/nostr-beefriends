@@ -196,7 +196,7 @@ const res_ohayo = (event: NostrEvent): [string, string[][]] => {
 
 const res_nerune = (
   event: NostrEvent,
-  mode: Mode,
+  _mode: Mode,
   regstr: RegExp,
 ): [string, string[][]] => {
   const match = event.content.match(regstr);
@@ -207,17 +207,18 @@ const res_nerune = (
   for (const m of match) {
     count += m.match(/ねる/g)?.length ?? 0;
   }
-  const quote =
-    event.kind === 1 ? nip19.noteEncode(event.id) : nip19.neventEncode(event);
+  const quote = event.kind === 1
+    ? nip19.noteEncode(event.id)
+    : nip19.neventEncode(event);
   return [`${count}ねるねです！\nnostr:${quote}`, getTagsQuote(event)];
 };
 
-const getTagsAirrep = (event: NostrEvent): string[][] => {
+const _getTagsAirrep = (event: NostrEvent): string[][] => {
   if (event.kind === 1) {
     return [['e', event.id, '', 'mention']];
   } else if (event.kind === 42) {
     const tagRoot = event.tags.find(
-      (tag: string[]) => tag.length >= 3 && tag[0] === 'e' && tag[3] === 'root',
+      (tag: string[]) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
     );
     if (tagRoot !== undefined) {
       return [tagRoot, ['e', event.id, '', 'mention']];
@@ -239,10 +240,12 @@ const getTagsReply = (event: NostrEvent): string[][] => {
   } else {
     tagsReply.push(['e', event.id, '', 'root']);
   }
-  for (const tag of event.tags.filter(
-    (tag: string[]) =>
-      tag.length >= 2 && tag[0] === 'p' && tag[1] !== event.pubkey,
-  )) {
+  for (
+    const tag of event.tags.filter(
+      (tag: string[]) =>
+        tag.length >= 2 && tag[0] === 'p' && tag[1] !== event.pubkey,
+    )
+  ) {
     tagsReply.push(tag);
   }
   tagsReply.push(['p', event.pubkey, '']);
@@ -254,7 +257,7 @@ const getTagsQuote = (event: NostrEvent): string[][] => {
     return [['q', event.id]];
   } else if (event.kind === 42) {
     const tagRoot = event.tags.find(
-      (tag: string[]) => tag.length >= 3 && tag[0] === 'e' && tag[3] === 'root',
+      (tag: string[]) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
     );
     if (tagRoot !== undefined) {
       return [tagRoot, ['e', event.id, '', 'mention']];

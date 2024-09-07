@@ -1,7 +1,7 @@
 import {
   type NostrEvent,
-  type VerifiedEvent,
   validateEvent,
+  type VerifiedEvent,
   verifyEvent,
 } from 'npm:nostr-tools/pure';
 import * as nip19 from 'npm:nostr-tools/nip19';
@@ -9,7 +9,7 @@ import { Mode, Signer } from './utils.ts';
 import { getResponseEvent } from './response.ts';
 
 //入力イベントを検証するかどうか(デバッグ時は無効化した方が楽)
-const verifyInputEvent = false;
+const verifyInputEvent = true;
 
 export const base = async (rawBody: string, mode: Mode): Promise<Response> => {
   //署名用インスタンスを準備
@@ -36,9 +36,9 @@ export const base = async (rawBody: string, mode: Mode): Promise<Response> => {
   const seckey = dr.data;
   const signer = new Signer(seckey);
   //入力イベントを準備
-  let requestBody: any;
+  let requestEvent: NostrEvent;
   try {
-    requestBody = JSON.parse(rawBody);
+    requestEvent = JSON.parse(rawBody);
   } catch (_error) {
     const body = JSON.stringify({ error: 'JSON parse failed' });
     return new Response(body, {
@@ -48,7 +48,6 @@ export const base = async (rawBody: string, mode: Mode): Promise<Response> => {
       },
     });
   }
-  const requestEvent: NostrEvent = requestBody;
   if (!validateEvent(requestEvent)) {
     const body = JSON.stringify({ error: 'Invalid event' });
     return new Response(body, {
