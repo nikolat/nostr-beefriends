@@ -1,6 +1,11 @@
 import { Mode, Signer } from './utils.ts';
+import { uploadFile } from './nip96.ts';
 import type { EventTemplate, NostrEvent, VerifiedEvent } from 'npm:nostr-tools/pure';
 import * as nip19 from 'npm:nostr-tools/nip19';
+import { type FileUploadResponse, type OptionalFormDataFields, readServerConfig } from 'npm:nostr-tools/nip96';
+import { getToken } from 'npm:nostr-tools/nip98';
+import { ImageMagick, initializeImageMagick, MagickGeometry } from 'https://deno.land/x/imagemagick_deno@0.0.14/mod.ts';
+import { parseMediaType } from 'https://deno.land/std@0.175.0/media_types/parse_media_type.ts';
 
 export const getResponseEvent = async (
   event: NostrEvent,
@@ -109,8 +114,11 @@ const getResmap = (
       mode: Mode,
       regstr: RegExp,
       signer: Signer,
-    ) => Promise<[string, string[][]]> | [string, string[][]] | null,
-  ][] = [[/おはよ/, res_ohayo]];
+    ) => Promise<[string, string[][]] | null> | [string, string[][]] | null,
+  ][] = [
+    [/おはよ/, res_ohayo],
+    [/image\sresize\s(\d+)x(\d+)/, res_image_resize],
+  ];
   switch (mode) {
     case Mode.Normal:
       return resmapNormal;
@@ -188,6 +196,81 @@ const mode_fav = (event: NostrEvent): EventTemplate | null => {
 
 const res_ohayo = (event: NostrEvent): [string, string[][]] => {
   return ['おはようございます！', getTagsReply(event)];
+};
+
+const res_image_resize = async (
+  event: NostrEvent,
+  _mode: Mode,
+  regstr: RegExp,
+  signer: Signer,
+): Promise<[string, string[][]] | null> => {
+  const targetUrlToUpload = 'https://yabu.me';
+  const match = event.content.match(regstr);
+  if (match === null) {
+    throw new Error();
+  }
+  const width = parseInt(match[1]);
+  const height = parseInt(match[2]);
+  const imageUrl = event.tags.find((tag) => tag.length >= 2 && tag[0] === 'r' && URL.canParse(tag[1]))?.at(1);
+  if (imageUrl === undefined) {
+    return ['rタグに画像のURLを指定してくださいね！', getTagsReply(event)];
+  }
+  if (width > 1000 || height > 1000) {
+    return ['大きすぎます…', getTagsReply(event)];
+  }
+  await initializeImageMagick();
+  const getRemoteImage = async (url: string) => {
+    const sourceRes = await fetch(url);
+    if (!sourceRes.ok) {
+      console.error('Error retrieving image from URL.');
+      return null;
+    }
+    const mediaType = parseMediaType(sourceRes.headers.get('Content-Type')!)[0];
+    if (mediaType.split('/')[0] !== 'image') {
+      console.error('URL is not image type.');
+      return null;
+    }
+    return {
+      buffer: new Uint8Array(await sourceRes.arrayBuffer()),
+      mediaType,
+    };
+  };
+  const remoteImage = await getRemoteImage(imageUrl);
+  if (remoteImage === null) {
+    return ['画像の取得に失敗しました…', getTagsReply(event)];
+  }
+  const modifyImage = (
+    imageBuffer: Uint8Array,
+    params: { width: number; height: number },
+  ) => {
+    const sizingData = new MagickGeometry(
+      params.width,
+      params.height,
+    );
+    sizingData.ignoreAspectRatio = params.height > 0 && params.width > 0;
+    return new Promise<Uint8Array>((resolve) => {
+      ImageMagick.read(imageBuffer, (image) => {
+        image.resize(sizingData);
+        image.write((data) => resolve(data));
+      });
+    });
+  };
+  const modifiedImage = await modifyImage(remoteImage.buffer, { width, height });
+  const f = (e: EventTemplate) => signer.finishEvent(e);
+  const c = await readServerConfig(targetUrlToUpload);
+  const s = await getToken(c.api_url, 'POST', f, true);
+  const blob = new Blob([modifiedImage], { type: remoteImage.mediaType });
+  const file = new File([blob], 'dummy_filename', { type: remoteImage.mediaType });
+  const option: OptionalFormDataFields = {
+    size: String(file.size),
+    content_type: file.type,
+  };
+  const fileUploadResponse: FileUploadResponse = await uploadFile(file, c.api_url, s, option);
+  const uploadedUrl = fileUploadResponse.nip94_event?.tags.find((tag) => tag.length >= 2 && tag[0] === 'url')?.at(1);
+  if (uploadedUrl === undefined) {
+    return ['画像のアップロードに失敗しました…', getTagsReply(event)];
+  }
+  return [`できました！\n${uploadedUrl}`, [...getTagsReply(event), ['r', uploadedUrl]]];
 };
 
 const res_nerune = (
