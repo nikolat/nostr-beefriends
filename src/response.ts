@@ -1,9 +1,5 @@
 import { Mode, Signer } from './utils.ts';
-import type {
-  EventTemplate,
-  NostrEvent,
-  VerifiedEvent,
-} from 'npm:nostr-tools/pure';
+import type { EventTemplate, NostrEvent, VerifiedEvent } from 'npm:nostr-tools/pure';
 import * as nip19 from 'npm:nostr-tools/nip19';
 
 export const getResponseEvent = async (
@@ -207,9 +203,7 @@ const res_nerune = (
   for (const m of match) {
     count += m.match(/ねる/g)?.length ?? 0;
   }
-  const quote = event.kind === 1
-    ? nip19.noteEncode(event.id)
-    : nip19.neventEncode(event);
+  const quote = event.kind === 1 ? nip19.noteEncode(event.id) : nip19.neventEncode(event);
   return [`${count}ねるねです！\nnostr:${quote}`, getTagsQuote(event)];
 };
 
@@ -242,8 +236,7 @@ const getTagsReply = (event: NostrEvent): string[][] => {
   }
   for (
     const tag of event.tags.filter(
-      (tag: string[]) =>
-        tag.length >= 2 && tag[0] === 'p' && tag[1] !== event.pubkey,
+      (tag: string[]) => tag.length >= 2 && tag[0] === 'p' && tag[1] !== event.pubkey,
     )
   ) {
     tagsReply.push(tag);

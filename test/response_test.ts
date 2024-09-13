@@ -1,13 +1,6 @@
-import {
-  assert,
-  assertEquals,
-} from 'https://deno.land/std@0.224.0/assert/mod.ts';
+import { assert, assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
 import * as fs from 'node:fs/promises';
-import {
-  generateSecretKey,
-  getPublicKey,
-  type NostrEvent,
-} from 'npm:nostr-tools/pure';
+import { generateSecretKey, getPublicKey, type NostrEvent } from 'npm:nostr-tools/pure';
 import * as nip19 from 'npm:nostr-tools/nip19';
 import { Mode, Signer } from '../src/utils.ts';
 import { getResponseEvent } from '../src/response.ts';
@@ -30,8 +23,7 @@ Deno.test('get response with JSON file', async () => {
     content: `3ねるねです！\nnostr:${quote}`,
     tags: [
       ...event.tags.filter(
-        (tag: string[]) =>
-          tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
+        (tag: string[]) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
       ),
       ['q', event.id],
     ],

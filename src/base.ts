@@ -1,9 +1,4 @@
-import {
-  type NostrEvent,
-  validateEvent,
-  type VerifiedEvent,
-  verifyEvent,
-} from 'npm:nostr-tools/pure';
+import { type NostrEvent, validateEvent, type VerifiedEvent, verifyEvent } from 'npm:nostr-tools/pure';
 import * as nip19 from 'npm:nostr-tools/nip19';
 import { Mode, Signer } from './utils.ts';
 import { getResponseEvent } from './response.ts';

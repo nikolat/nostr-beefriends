@@ -1,8 +1,4 @@
-import {
-  type EventTemplate,
-  finalizeEvent,
-  getPublicKey,
-} from 'npm:nostr-tools/pure';
+import { type EventTemplate, finalizeEvent, getPublicKey } from 'npm:nostr-tools/pure';
 
 export const enum Mode {
   Normal,
