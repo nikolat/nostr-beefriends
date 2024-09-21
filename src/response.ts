@@ -277,7 +277,7 @@ const res_nerune = (
   event: NostrEvent,
   _mode: Mode,
   regstr: RegExp,
-): [string, string[][]] => {
+): [string, string[][]] | null => {
   const match = event.content.match(regstr);
   if (match === null) {
     throw new Error();
@@ -285,6 +285,9 @@ const res_nerune = (
   let count = 0;
   for (const m of match) {
     count += m.match(/ねる/g)?.length ?? 0;
+  }
+  if (count <= 3) {
+    return null;
   }
   const quote = event.kind === 1 ? nip19.noteEncode(event.id) : nip19.neventEncode(event);
   return [`${count}ねるねです！\nnostr:${quote}`, getTagsQuote(event)];
