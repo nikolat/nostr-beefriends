@@ -20,7 +20,7 @@ Deno.test('get response with JSON file', async () => {
     kind: event.kind,
     pubkey: getPublicKey(sk),
     created_at: event.created_at + 1,
-    content: `3ねるねです！\nnostr:${quote}`,
+    content: `7ねるねです！\nnostr:${quote}`,
     tags: [
       ...event.tags.filter(
         (tag: string[]) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
