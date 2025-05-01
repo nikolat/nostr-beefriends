@@ -323,13 +323,13 @@ const getTagsReply = (event: NostrEvent, addPTag: boolean = true): string[][] =>
 
 const getTagsQuote = (event: NostrEvent): string[][] => {
   if (event.kind === 1) {
-    return [['q', event.id]];
+    return [['q', event.id, '', event.pubkey]];
   } else if (event.kind === 42) {
     const tagRoot = event.tags.find(
       (tag: string[]) => tag.length >= 4 && tag[0] === 'e' && tag[3] === 'root',
     );
     if (tagRoot !== undefined) {
-      return [tagRoot, ['e', event.id, '', 'mention']];
+      return [tagRoot, ['q', event.id, '', event.pubkey]];
     } else {
       throw new TypeError('root is not found');
     }
